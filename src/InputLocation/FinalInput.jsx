@@ -13,11 +13,11 @@ export default function Inputtt() {
   const [message, setMessage] = useState("");
   const [daysArray, setDaysArray] = useState([]);
   const [sharedContent, setSharedContent] = useState("");
-const [shareOption, setShareOption] = useState("");
-
+  const [recentSearches, setRecentSearches] = useState([]);
 
   useEffect(() => {
     checkRedirect();
+    fetchRecentSearches();
   }, []);
 
   function checkRedirect() {
@@ -82,7 +82,6 @@ const [shareOption, setShareOption] = useState("");
         itinerary: updatedItinerary,
       };
 
-      // Send the data to the backend
       const response = await axios.post(`${BASE_URL}/api/saveItinerary`, data);
       console.log("Response from backend:", response.data);
 
@@ -102,6 +101,16 @@ const [shareOption, setShareOption] = useState("");
     }
     setDaysArray(days);
   }, [itinerary]);
+
+  // Fetch recent searches from the backend
+  const fetchRecentSearches = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/recentSearches`);
+      setRecentSearches(response.data);
+    } catch (error) {
+      console.log("Error fetching recent searches:", error);
+    }
+  };
 
   return (
     <main>
@@ -147,29 +156,45 @@ const [shareOption, setShareOption] = useState("");
               </div>
             ))}
         </div>
-        <div>
 
-        {sharedContent && (
-  <div style={styles.shareOptions}>
-    <h2>Share Trip Details</h2>
-    <div style={styles.shareButtons}>
-      <EmailShareButton
-        subject={`${request.city} Trip Details`}
-        body={sharedContent}
-        separator="\n\n"
-      >
-        <button className="button" style={styles.button}>
-          Share via Email
-        </button>
-      </EmailShareButton>
-      <WhatsappShareButton title={`${request.city} Trip Details`} url={sharedContent}>
-        <button className="button" style={styles.button}>
-          Share via WhatsApp
-        </button>
-      </WhatsappShareButton>
-    </div>
-  </div>
-)}
+        <div>
+  <h2>Recent Searches</h2>
+  {recentSearches
+    .filter((search) => search.itinerary) // Filter out searches without itinerary content
+    .map((search, index) => (
+      <div className="card" style={styles.card} key={index}>
+        <p className="city" style={styles.city}>{search.city}</p>
+        <p className="days" style={styles.days}>{search.days}</p>
+        <p className="itinerary" style={styles.itinerary}>{search.itinerary}</p>
+      </div>
+    ))}
+</div>
+
+        <div>
+          {sharedContent && (
+            <div style={styles.shareOptions}>
+              <h2>Share Trip Details</h2>
+              <div style={styles.shareButtons}>
+                <EmailShareButton
+                  subject={`${request.city} Trip Details`}
+                  body={sharedContent}
+                  separator="\n\n"
+                >
+                  <button className="button" style={styles.button}>
+                    Share via Email
+                  </button>
+                </EmailShareButton>
+                <WhatsappShareButton
+                  title={`${request.city} Trip Details`}
+                  url={sharedContent}
+                >
+                  <button className="button" style={styles.button}>
+                    Share via WhatsApp
+                  </button>
+                </WhatsappShareButton>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </main>
@@ -225,5 +250,30 @@ const styles = {
     marginBottom: "10px",
     fontSize: "16px",
     color: "#333",
+  },
+  card: {
+    height: "auto",
+    width: "40%",
+    margin: "auto",
+    textAlign: "left",
+    padding: "10px",
+    boxShadow: "0px 0px 12px rgba(0, 0, 0, 0.2)",
+    borderRadius: "10px",
+    marginBottom: "10px",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+  city: {
+    fontSize: "18px",
+    fontWeight: "bold",
+    marginBottom: "5px",
+  },
+  days: {
+    fontSize: "16px",
+    marginBottom: "5px",
+  },
+  itinerary: {
+    fontSize: "14px",
   },
 };
